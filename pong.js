@@ -7,7 +7,10 @@ const playerWidth = 24;
 const playerHeight = 1/6 * height;
 const playerSpeed = 5;
 const ballRadius = 18;
-const ballSpeed = 0;
+
+//vitesses X et Y de déplacement de la balle
+let ballXSpeed = 8;
+let ballYSpeed = 8;
 
 //crée une app PIXI
 const app = new PIXI.Application({width: width, height: height, antialias: true});
@@ -61,13 +64,18 @@ app.stage.addChild(player2);
 //boucle principale
 app.ticker.add((delta) => {
     //on empêche le joueur de sortir de l'écran
-    checkScreenLimit();
-    //actualise le déplacement des deux joueurs
+    checkPlayerScreenLimit();
+    //on empêche la balle de sortir de l'écran
+    checkBallScreenLimit();
+    //actualise la position Y du joueur 1, si le coeff est à 0 il n'y a pas de déplacement
+    player1.y += player1.movement * playerSpeed * delta;
+    //applique la nouvelle position des joueurs
     player1.position.set(player1.x, player1.y);
     player2.position.set(player2.x, player2.y);
-    //applique le déplacement du joueur 1, si le coeff est à 0 il n'y a pas de déplacement
-    player1.y += player1.movement * playerSpeed * delta;
-    //actualise le déplacement de la balle
+    //actualise les positions X et Y de la balle
+    ball.x += ballXSpeed * delta;
+    ball.y += ballYSpeed * delta;
+    //applique la nouvelle position de la balle
     ball.position.set(ball.x, ball.y);
 });
 
@@ -100,7 +108,7 @@ function onKeyUp(key)
 }
 
 //fonction servant à empêcher le joueur de sortir de l'écran
-function checkScreenLimit()
+function checkPlayerScreenLimit()
 {
     //si le joueur sort en haut de l'écran
     if(player1.y <= 0)
@@ -116,4 +124,45 @@ function checkScreenLimit()
         player1.movement = 0;
         player1.y--;
     }
+}
+
+//fonction servant à empêcher la balle de sortir de l'écran
+function checkBallScreenLimit()
+{
+    //si la balle sort en haut de l'écran
+    if(ball.y <= 0)
+    {
+        ball.y++;
+        bounceY();
+    }
+    //si la balle sort en bas de l'écran
+    if(ball.y >= height)
+    {
+        ball.y--;
+        bounceY();
+    }
+    //si la balle sort à gauche de l'écran
+    if(ball.x <= 0)
+    {
+        ball.x++;
+        bounceX();
+    }
+    //si la balle sort à droite de l'écran
+    if(ball.x >= width)
+    {
+        ball.x--;
+        bounceX();
+    }
+}
+
+//fonction servant à faire rebondir la balle sur l'axe X
+function bounceX()
+{
+    ballXSpeed = -ballXSpeed;
+}
+
+//fonction servant à faire rebondir la balle sur l'axe Y
+function bounceY()
+{
+    ballYSpeed = -ballYSpeed;
 }
