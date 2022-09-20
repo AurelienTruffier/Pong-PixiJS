@@ -2,15 +2,15 @@
 let width = window.innerWidth;
 let height = window.innerHeight;
 
-//constantes
-const playerWidth = 24;
-const playerHeight = 1/6 * height;
-const playerSpeed = 5;
-const ballRadius = 18;
-
 //vitesses X et Y de déplacement de la balle
 let ballXSpeed = 8;
 let ballYSpeed = 8;
+
+//constantes
+const playerWidth = 24;
+const playerHeight = 1/6 * height;
+const playerSpeed = ballYSpeed - 1; //légèrement moins rapide que la vitesse verticale de la balle
+const ballRadius = 18;
 
 //crée une app PIXI
 const app = new PIXI.Application({width: width, height: height, antialias: true});
@@ -51,8 +51,6 @@ line.endFill();
 let ball = new PIXI.Graphics();
 ball.beginFill(0xFFFFFF);
 ball.drawCircle(0, 0, ballRadius);
-ball.x = width/2;
-ball.y = height/2;
 ball.endFill();
 
 //ajoute tous les objets dans le canvas
@@ -60,6 +58,9 @@ app.stage.addChild(player1);
 app.stage.addChild(line);
 app.stage.addChild(ball);
 app.stage.addChild(player2);
+
+//place la balle au centre de l'écran en début de partie
+replaceBall();
 
 //boucle principale
 app.ticker.add((delta) => {
@@ -69,6 +70,8 @@ app.ticker.add((delta) => {
     checkBallScreenLimit();
     //actualise la position Y du joueur 1, si le coeff est à 0 il n'y a pas de déplacement
     player1.y += player1.movement * playerSpeed * delta;
+    //actualise la position Y du joueur 2
+    player2.y = ball.y - (player1.height/2);
     //applique la nouvelle position des joueurs
     player1.position.set(player1.x, player1.y);
     player2.position.set(player2.x, player2.y);
@@ -77,6 +80,22 @@ app.ticker.add((delta) => {
     ball.y += ballYSpeed * delta;
     //applique la nouvelle position de la balle
     ball.position.set(ball.x, ball.y);
+    //si la balle est en collision avec le joueur1
+    if(checkCollisionPlayer(ball.x, ball.y, ballRadius, player1.x, player1.y, player1.width, player1.height))
+    {
+        //marge de sécurité
+        ball.x += 3;
+        //la balle rebondit sur la raquette
+        bounceX();
+    }
+    //si la balle est en collision avec le joueur2
+    if(checkCollisionPlayer(ball.x, ball.y, ballRadius, player2.x, player2.y, player2.width, player2.height))
+    {
+        //marge de sécurité
+        ball.x -= 3;
+        //la balle rebondit sur la raquette
+        bounceX();
+    }
 });
 
 //quand une touche est enfoncé
@@ -141,18 +160,23 @@ function checkBallScreenLimit()
         ball.y--;
         bounceY();
     }
-    //si la balle sort à gauche de l'écran
+    //si la balle sort à gauche de l'éballRan
     if(ball.x <= 0)
     {
-        ball.x++;
-        bounceX();
+        replaceBall();
     }
     //si la balle sort à droite de l'écran
     if(ball.x >= width)
     {
-        ball.x--;
-        bounceX();
+        replaceBall();
     }
+}
+
+//fonction servant à replacer la balle au centre de l'écran
+function replaceBall()
+{
+    ball.x = width/2;
+    ball.y = height/2;
 }
 
 //fonction servant à faire rebondir la balle sur l'axe X
@@ -165,4 +189,31 @@ function bounceX()
 function bounceY()
 {
     ballYSpeed = -ballYSpeed;
+}
+
+//fonction servant à détecter si la balle est en collision avec un joueur
+function checkCollisionPlayer(ballX, ballY, ballR, playerX, playerY, playerW, playerH)
+{
+	let circle_distance_x = Math.abs(ballX - playerX - playerW/2)
+	let circle_distance_y = Math.abs(ballY - playerY - playerH/2)
+
+	if(circle_distance_x > (playerW/2 + ballR)) 
+    {
+        return false; 
+    }
+	if(circle_distance_y > (playerH/2 + ballR)) 
+    {
+        return false;
+    }
+	if(circle_distance_x <= (playerW/2))
+    {
+        return true;
+    }
+	if(circle_distance_y <= (playerH/2))
+    {
+        return true;
+    }
+	let corner_distance_sq = Math.pow(circle_distance_x - playerW/2, 2) + Math.pow(circle_distance_y - playerH/2, 2);
+
+	return corner_distance_sq <= Math.pow(ballR, 2);
 }
