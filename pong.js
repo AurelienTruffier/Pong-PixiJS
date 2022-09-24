@@ -6,11 +6,16 @@ let height = window.innerHeight;
 let ballXSpeed = 8;
 let ballYSpeed = 8;
 
+//scores des 2 joueurs
+let player1Score = 0;
+let player2Score = 0;
+
 //constantes
 const playerWidth = 24;
 const playerHeight = 1/6 * height;
 const playerSpeed = ballYSpeed - 1; //légèrement moins rapide que la vitesse verticale de la balle
 const ballRadius = 18;
+const scoreFontSize = 64;
 
 //crée une app PIXI
 const app = new PIXI.Application({width: width, height: height, antialias: true});
@@ -53,17 +58,41 @@ ball.beginFill(0xFFFFFF);
 ball.drawCircle(0, 0, ballRadius);
 ball.endFill();
 
+//création des 2 textes qui vont afficher les scores
+let player1ScoreText = new PIXI.Text(player1Score, {
+    fill: "#ffffff",
+    fontSize: scoreFontSize,
+    fontWeight: 'bolder',
+});
+let player2ScoreText = new PIXI.Text(player2Score, {
+    fill: "#ffffff",
+    fontSize: scoreFontSize,
+    fontWeight: 'bolder',
+});
+
+//améliore le rendu des scores à l'écran
+player1ScoreText.resolution = 2;
+player2ScoreText.resolution = 2;
+
 //ajoute tous les objets dans le canvas
 app.stage.addChild(player1);
 app.stage.addChild(line);
 app.stage.addChild(ball);
 app.stage.addChild(player2);
+app.stage.addChild(player1ScoreText);
+app.stage.addChild(player2ScoreText);
+
+//positionne les 2 scores à l'écran
+player1ScoreText.position.set(1/4 * width - (player1ScoreText.width/2), 2/100 * height);
+player2ScoreText.position.set(3/4 * width - (player2ScoreText.width/2), 2/100 * height);
 
 //place la balle au centre de l'écran en début de partie
 replaceBall();
 
 //boucle principale
 app.ticker.add((delta) => {
+    //actualise le score à l'écran
+    updateScore();
     //on empêche le joueur de sortir de l'écran
     checkPlayerScreenLimit();
     //on empêche la balle de sortir de l'écran
@@ -140,7 +169,9 @@ function checkPlayerScreenLimit()
     //si le joueur sort en bas de l'écran
     if(player1.y >= (height - playerHeight))
     {
+        //fige le joueur
         player1.movement = 0;
+        //le pousse dans la zone de jeu pour éviter de le bloquer
         player1.y--;
     }
 }
@@ -151,24 +182,34 @@ function checkBallScreenLimit()
     //si la balle sort en haut de l'écran
     if(ball.y <= 0)
     {
+        //marge de sécurité
         ball.y++;
+        //rebondissement vertical
         bounceY();
     }
     //si la balle sort en bas de l'écran
     if(ball.y >= height)
     {
+        //marge de sécurité
         ball.y--;
+        //rebondissement vertical
         bounceY();
     }
-    //si la balle sort à gauche de l'éballRan
+    //si la balle sort à gauche de l'écran
     if(ball.x <= 0)
     {
+        //replace la balle au centre de l'écran
         replaceBall();
+        //ajoute 1 au score du joueur 2
+        player2Score++;
     }
     //si la balle sort à droite de l'écran
     if(ball.x >= width)
     {
+        //replace la balle au centre de l'écran
         replaceBall();
+        //ajoute 1 au score du joueur 1
+        player1Score++;
     }
 }
 
@@ -182,12 +223,14 @@ function replaceBall()
 //fonction servant à faire rebondir la balle sur l'axe X
 function bounceX()
 {
+    //inverse la direction horizontale de la balle
     ballXSpeed = -ballXSpeed;
 }
 
 //fonction servant à faire rebondir la balle sur l'axe Y
 function bounceY()
 {
+    //inverse la direction verticale de la balle
     ballYSpeed = -ballYSpeed;
 }
 
@@ -216,4 +259,11 @@ function checkCollisionPlayer(ballX, ballY, ballR, playerX, playerY, playerW, pl
 	let corner_distance_sq = Math.pow(circle_distance_x - playerW/2, 2) + Math.pow(circle_distance_y - playerH/2, 2);
 
 	return corner_distance_sq <= Math.pow(ballR, 2);
+}
+
+//fonction à appeler pour actualiser les scores à l'écran
+function updateScore()
+{
+    player1ScoreText.text = player1Score;
+    player2ScoreText.text = player2Score;
 }
